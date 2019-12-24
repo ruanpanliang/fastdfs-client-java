@@ -332,7 +332,7 @@ public class StorageClient1 extends StorageClient {
                              byte[] file_buff, int offset, int length, String file_ext_name,
                              NameValuePair[] meta_list) throws IOException, MyException {
     String[] parts = new String[2];
-    this.errno = this.split_file_id(master_file_id, parts);
+    this.errno = split_file_id(master_file_id, parts);
     if (this.errno != 0) {
       return null;
     }
@@ -362,7 +362,7 @@ public class StorageClient1 extends StorageClient {
                              UploadCallback callback, String file_ext_name,
                              NameValuePair[] meta_list) throws IOException, MyException {
     String[] parts = new String[2];
-    this.errno = this.split_file_id(master_file_id, parts);
+    this.errno = split_file_id(master_file_id, parts);
     if (this.errno != 0) {
       return null;
     }

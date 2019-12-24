@@ -1,11 +1,10 @@
 /**
  * Copyright (C) 2008 Happy Fish / YuQing
- * <p>
- * FastDFS Java Client may be copied only under the terms of the GNU Lesser
- * General Public License (LGPL).
- * Please visit the FastDFS Home Page https://github.com/happyfish100/fastdfs for more detail.
+ *
+ * <p>FastDFS Java Client may be copied only under the terms of the GNU Lesser General Public
+ * License (LGPL). Please visit the FastDFS Home Page https://github.com/happyfish100/fastdfs for
+ * more detail.
  */
-
 package org.csource.fastdfs;
 
 import java.io.IOException;
@@ -14,8 +13,8 @@ import java.net.Socket;
 import java.util.Arrays;
 
 /**
- * Tracker client for request to tracker server
- * Note: the instance of this class is NOT thread safe !!!
+ * Tracker client for request to tracker server Note: the instance of this class is NOT thread safe
+ * !!!
  *
  * @author Happy Fish / YuQing
  * @version Version 1.19
@@ -24,9 +23,9 @@ public class TrackerClient {
   protected TrackerGroup tracker_group;
   protected byte errno;
 
-  /**
-   * constructor with global tracker group
-   */
+  // protected String  storage_ip = "";
+
+  /** constructor with global tracker group */
   public TrackerClient() {
     this.tracker_group = ClientGlobal.g_tracker_group;
   }
@@ -38,6 +37,8 @@ public class TrackerClient {
    */
   public TrackerClient(TrackerGroup tracker_group) {
     this.tracker_group = tracker_group;
+    //    String hostAddress = this.tracker_group.tracker_servers[0].getAddress().getHostAddress();
+    //    System.out.println("hostAddress = " + hostAddress);
   }
 
   /**
@@ -73,10 +74,11 @@ public class TrackerClient {
    * query storage server to upload file
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name to upload file to, can be empty
+   * @param groupName the group name to upload file to, can be empty
    * @return storage server object, return null if fail
    */
-  public StorageServer getStoreStorage(TrackerServer trackerServer, String groupName) throws IOException {
+  public StorageServer getStoreStorage(TrackerServer trackerServer, String groupName)
+      throws IOException {
     byte[] header;
     String ip_addr;
     int port;
@@ -128,18 +130,29 @@ public class TrackerClient {
         out.write(bGroupName);
       }
 
-      ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-        ProtoCommon.TRACKER_PROTO_CMD_RESP,
-        ProtoCommon.TRACKER_QUERY_STORAGE_STORE_BODY_LEN);
+      ProtoCommon.RecvPackageInfo pkgInfo =
+          ProtoCommon.recvPackage(
+              trackerSocket.getInputStream(),
+              ProtoCommon.TRACKER_PROTO_CMD_RESP,
+              ProtoCommon.TRACKER_QUERY_STORAGE_STORE_BODY_LEN);
       this.errno = pkgInfo.errno;
       if (pkgInfo.errno != 0) {
         return null;
       }
 
-      ip_addr = new String(pkgInfo.body, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN, ProtoCommon.FDFS_IPADDR_SIZE - 1).trim();
+//      ip_addr =
+//          new String(
+//                  pkgInfo.body,
+//                  ProtoCommon.FDFS_GROUP_NAME_MAX_LEN,
+//                  ProtoCommon.FDFS_IPADDR_SIZE - 1)
+//              .trim();
+      ip_addr = this.tracker_group.tracker_servers[0].getAddress().getHostAddress();
 
-      port = (int) ProtoCommon.buff2long(pkgInfo.body, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN
-        + ProtoCommon.FDFS_IPADDR_SIZE - 1);
+      port =
+          (int)
+              ProtoCommon.buff2long(
+                  pkgInfo.body,
+                  ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ProtoCommon.FDFS_IPADDR_SIZE - 1);
       store_path = pkgInfo.body[ProtoCommon.TRACKER_QUERY_STORAGE_STORE_BODY_LEN - 1];
 
       return new StorageServer(ip_addr, port, store_path);
@@ -168,10 +181,11 @@ public class TrackerClient {
    * query storage servers to upload file
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name to upload file to, can be empty
+   * @param groupName the group name to upload file to, can be empty
    * @return storage servers, return null if fail
    */
-  public StorageServer[] getStoreStorages(TrackerServer trackerServer, String groupName) throws IOException {
+  public StorageServer[] getStoreStorages(TrackerServer trackerServer, String groupName)
+      throws IOException {
     byte[] header;
     String ip_addr;
     int port;
@@ -222,8 +236,9 @@ public class TrackerClient {
         out.write(bGroupName);
       }
 
-      ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-        ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
+      ProtoCommon.RecvPackageInfo pkgInfo =
+          ProtoCommon.recvPackage(
+              trackerSocket.getInputStream(), ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
       this.errno = pkgInfo.errno;
       if (pkgInfo.errno != 0) {
         return null;
@@ -235,7 +250,8 @@ public class TrackerClient {
       }
 
       int ipPortLen = pkgInfo.body.length - (ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + 1);
-      final int recordLength = ProtoCommon.FDFS_IPADDR_SIZE - 1 + ProtoCommon.FDFS_PROTO_PKG_LEN_SIZE;
+      final int recordLength =
+          ProtoCommon.FDFS_IPADDR_SIZE - 1 + ProtoCommon.FDFS_PROTO_PKG_LEN_SIZE;
 
       if (ipPortLen % recordLength != 0) {
         this.errno = ProtoCommon.ERR_NO_EINVAL;
@@ -288,14 +304,18 @@ public class TrackerClient {
    * query storage server to download file
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name of storage server
-   * @param filename      filename on storage server
+   * @param groupName the group name of storage server
+   * @param filename filename on storage server
    * @return storage server Socket object, return null if fail
    */
-  public StorageServer getFetchStorage(TrackerServer trackerServer,
-                                       String groupName, String filename) throws IOException {
-    ServerInfo[] servers = this.getStorages(trackerServer, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE,
-      groupName, filename);
+  public StorageServer getFetchStorage(
+      TrackerServer trackerServer, String groupName, String filename) throws IOException {
+    ServerInfo[] servers =
+        this.getStorages(
+            trackerServer,
+            ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE,
+            groupName,
+            filename);
     if (servers == null) {
       return null;
     } else {
@@ -307,14 +327,15 @@ public class TrackerClient {
    * query storage server to update file (delete file or set meta data)
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name of storage server
-   * @param filename      filename on storage server
+   * @param groupName the group name of storage server
+   * @param filename filename on storage server
    * @return storage server Socket object, return null if fail
    */
-  public StorageServer getUpdateStorage(TrackerServer trackerServer,
-                                        String groupName, String filename) throws IOException {
-    ServerInfo[] servers = this.getStorages(trackerServer, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE,
-      groupName, filename);
+  public StorageServer getUpdateStorage(
+      TrackerServer trackerServer, String groupName, String filename) throws IOException {
+    ServerInfo[] servers =
+        this.getStorages(
+            trackerServer, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE, groupName, filename);
     if (servers == null) {
       return null;
     } else {
@@ -326,28 +347,28 @@ public class TrackerClient {
    * get storage servers to download file
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name of storage server
-   * @param filename      filename on storage server
+   * @param groupName the group name of storage server
+   * @param filename filename on storage server
    * @return storage servers, return null if fail
    */
-  public ServerInfo[] getFetchStorages(TrackerServer trackerServer,
-                                       String groupName, String filename) throws IOException {
-    return this.getStorages(trackerServer, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL,
-      groupName, filename);
+  public ServerInfo[] getFetchStorages(
+      TrackerServer trackerServer, String groupName, String filename) throws IOException {
+    return this.getStorages(
+        trackerServer, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ALL, groupName, filename);
   }
 
   /**
    * query storage server to download file
    *
    * @param trackerServer the tracker server
-   * @param cmd           command code, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE or
-   *                      ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE
-   * @param groupName     the group name of storage server
-   * @param filename      filename on storage server
+   * @param cmd command code, ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_FETCH_ONE or
+   *     ProtoCommon.TRACKER_PROTO_CMD_SERVICE_QUERY_UPDATE
+   * @param groupName the group name of storage server
+   * @param filename filename on storage server
    * @return storage server Socket object, return null if fail
    */
-  protected ServerInfo[] getStorages(TrackerServer trackerServer,
-                                     byte cmd, String groupName, String filename) throws IOException {
+  protected ServerInfo[] getStorages(
+      TrackerServer trackerServer, byte cmd, String groupName, String filename) throws IOException {
     byte[] header;
     byte[] bFileName;
     byte[] bGroupName;
@@ -383,15 +404,18 @@ public class TrackerClient {
       Arrays.fill(bGroupName, (byte) 0);
       System.arraycopy(bs, 0, bGroupName, 0, len);
 
-      header = ProtoCommon.packHeader(cmd, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + bFileName.length, (byte) 0);
+      header =
+          ProtoCommon.packHeader(
+              cmd, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + bFileName.length, (byte) 0);
       byte[] wholePkg = new byte[header.length + bGroupName.length + bFileName.length];
       System.arraycopy(header, 0, wholePkg, 0, header.length);
       System.arraycopy(bGroupName, 0, wholePkg, header.length, bGroupName.length);
       System.arraycopy(bFileName, 0, wholePkg, header.length + bGroupName.length, bFileName.length);
       out.write(wholePkg);
 
-      ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-        ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
+      ProtoCommon.RecvPackageInfo pkgInfo =
+          ProtoCommon.recvPackage(
+              trackerSocket.getInputStream(), ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
       this.errno = pkgInfo.errno;
       if (pkgInfo.errno != 0) {
         return null;
@@ -401,13 +425,23 @@ public class TrackerClient {
         throw new IOException("Invalid body length: " + pkgInfo.body.length);
       }
 
-      if ((pkgInfo.body.length - ProtoCommon.TRACKER_QUERY_STORAGE_FETCH_BODY_LEN) % (ProtoCommon.FDFS_IPADDR_SIZE - 1) != 0) {
+      if ((pkgInfo.body.length - ProtoCommon.TRACKER_QUERY_STORAGE_FETCH_BODY_LEN)
+              % (ProtoCommon.FDFS_IPADDR_SIZE - 1)
+          != 0) {
         throw new IOException("Invalid body length: " + pkgInfo.body.length);
       }
 
-      int server_count = 1 + (pkgInfo.body.length - ProtoCommon.TRACKER_QUERY_STORAGE_FETCH_BODY_LEN) / (ProtoCommon.FDFS_IPADDR_SIZE - 1);
+      int server_count =
+          1
+              + (pkgInfo.body.length - ProtoCommon.TRACKER_QUERY_STORAGE_FETCH_BODY_LEN)
+                  / (ProtoCommon.FDFS_IPADDR_SIZE - 1);
 
-      ip_addr = new String(pkgInfo.body, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN, ProtoCommon.FDFS_IPADDR_SIZE - 1).trim();
+      ip_addr =
+          new String(
+                  pkgInfo.body,
+                  ProtoCommon.FDFS_GROUP_NAME_MAX_LEN,
+                  ProtoCommon.FDFS_IPADDR_SIZE - 1)
+              .trim();
       int offset = ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ProtoCommon.FDFS_IPADDR_SIZE - 1;
 
       port = (int) ProtoCommon.buff2long(pkgInfo.body, offset);
@@ -416,7 +450,9 @@ public class TrackerClient {
       ServerInfo[] servers = new ServerInfo[server_count];
       servers[0] = new ServerInfo(ip_addr, port);
       for (int i = 1; i < server_count; i++) {
-        servers[i] = new ServerInfo(new String(pkgInfo.body, offset, ProtoCommon.FDFS_IPADDR_SIZE - 1).trim(), port);
+        servers[i] =
+            new ServerInfo(
+                new String(pkgInfo.body, offset, ProtoCommon.FDFS_IPADDR_SIZE - 1).trim(), port);
         offset += ProtoCommon.FDFS_IPADDR_SIZE - 1;
       }
 
@@ -446,10 +482,11 @@ public class TrackerClient {
    * query storage server to download file
    *
    * @param trackerServer the tracker server
-   * @param file_id       the file id(including group name and filename)
+   * @param file_id the file id(including group name and filename)
    * @return storage server Socket object, return null if fail
    */
-  public StorageServer getFetchStorage1(TrackerServer trackerServer, String file_id) throws IOException {
+  public StorageServer getFetchStorage1(TrackerServer trackerServer, String file_id)
+      throws IOException {
     String[] parts = new String[2];
     this.errno = StorageClient1.split_file_id(file_id, parts);
     if (this.errno != 0) {
@@ -463,10 +500,11 @@ public class TrackerClient {
    * get storage servers to download file
    *
    * @param trackerServer the tracker server
-   * @param file_id       the file id(including group name and filename)
+   * @param file_id the file id(including group name and filename)
    * @return storage servers, return null if fail
    */
-  public ServerInfo[] getFetchStorages1(TrackerServer trackerServer, String file_id) throws IOException {
+  public ServerInfo[] getFetchStorages1(TrackerServer trackerServer, String file_id)
+      throws IOException {
     String[] parts = new String[2];
     this.errno = StorageClient1.split_file_id(file_id, parts);
     if (this.errno != 0) {
@@ -509,15 +547,17 @@ public class TrackerClient {
       header = ProtoCommon.packHeader(ProtoCommon.TRACKER_PROTO_CMD_SERVER_LIST_GROUP, 0, (byte) 0);
       out.write(header);
 
-      ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-        ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
+      ProtoCommon.RecvPackageInfo pkgInfo =
+          ProtoCommon.recvPackage(
+              trackerSocket.getInputStream(), ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
       this.errno = pkgInfo.errno;
       if (pkgInfo.errno != 0) {
         return null;
       }
 
       ProtoStructDecoder<StructGroupStat> decoder = new ProtoStructDecoder<StructGroupStat>();
-      return decoder.decode(pkgInfo.body, StructGroupStat.class, StructGroupStat.getFieldsTotalSize());
+      return decoder.decode(
+          pkgInfo.body, StructGroupStat.class, StructGroupStat.getFieldsTotalSize());
     } catch (IOException ex) {
       if (!bNewConnection) {
         try {
@@ -547,10 +587,11 @@ public class TrackerClient {
    * query storage server stat info of the group
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name of storage server
+   * @param groupName the group name of storage server
    * @return storage server stat array, return null if fail
    */
-  public StructStorageStat[] listStorages(TrackerServer trackerServer, String groupName) throws IOException {
+  public StructStorageStat[] listStorages(TrackerServer trackerServer, String groupName)
+      throws IOException {
     final String storageIpAddr = null;
     return this.listStorages(trackerServer, groupName, storageIpAddr);
   }
@@ -559,12 +600,12 @@ public class TrackerClient {
    * query storage server stat info of the group
    *
    * @param trackerServer the tracker server
-   * @param groupName     the group name of storage server
+   * @param groupName the group name of storage server
    * @param storageIpAddr the storage server ip address, can be null or empty
    * @return storage server stat array, return null if fail
    */
-  public StructStorageStat[] listStorages(TrackerServer trackerServer,
-                                          String groupName, String storageIpAddr) throws IOException {
+  public StructStorageStat[] listStorages(
+      TrackerServer trackerServer, String groupName, String storageIpAddr) throws IOException {
     byte[] header;
     byte[] bGroupName;
     byte[] bs;
@@ -610,7 +651,11 @@ public class TrackerClient {
         ipAddrLen = 0;
       }
 
-      header = ProtoCommon.packHeader(ProtoCommon.TRACKER_PROTO_CMD_SERVER_LIST_STORAGE, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ipAddrLen, (byte) 0);
+      header =
+          ProtoCommon.packHeader(
+              ProtoCommon.TRACKER_PROTO_CMD_SERVER_LIST_STORAGE,
+              ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ipAddrLen,
+              (byte) 0);
       byte[] wholePkg = new byte[header.length + bGroupName.length + ipAddrLen];
       System.arraycopy(header, 0, wholePkg, 0, header.length);
       System.arraycopy(bGroupName, 0, wholePkg, header.length, bGroupName.length);
@@ -619,15 +664,17 @@ public class TrackerClient {
       }
       out.write(wholePkg);
 
-      ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-        ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
+      ProtoCommon.RecvPackageInfo pkgInfo =
+          ProtoCommon.recvPackage(
+              trackerSocket.getInputStream(), ProtoCommon.TRACKER_PROTO_CMD_RESP, -1);
       this.errno = pkgInfo.errno;
       if (pkgInfo.errno != 0) {
         return null;
       }
 
       ProtoStructDecoder<StructStorageStat> decoder = new ProtoStructDecoder<StructStorageStat>();
-      return decoder.decode(pkgInfo.body, StructStorageStat.class, StructStorageStat.getFieldsTotalSize());
+      return decoder.decode(
+          pkgInfo.body, StructStorageStat.class, StructStorageStat.getFieldsTotalSize());
     } catch (IOException ex) {
       if (!bNewConnection) {
         try {
@@ -657,12 +704,12 @@ public class TrackerClient {
    * delete a storage server from the tracker server
    *
    * @param trackerServer the connected tracker server
-   * @param groupName     the group name of storage server
+   * @param groupName the group name of storage server
    * @param storageIpAddr the storage server ip address
    * @return true for success, false for fail
    */
-  private boolean deleteStorage(TrackerServer trackerServer,
-                                String groupName, String storageIpAddr) throws IOException {
+  private boolean deleteStorage(TrackerServer trackerServer, String groupName, String storageIpAddr)
+      throws IOException {
     byte[] header;
     byte[] bGroupName;
     byte[] bs;
@@ -691,15 +738,20 @@ public class TrackerClient {
       ipAddrLen = ProtoCommon.FDFS_IPADDR_SIZE - 1;
     }
 
-    header = ProtoCommon.packHeader(ProtoCommon.TRACKER_PROTO_CMD_SERVER_DELETE_STORAGE, ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ipAddrLen, (byte) 0);
+    header =
+        ProtoCommon.packHeader(
+            ProtoCommon.TRACKER_PROTO_CMD_SERVER_DELETE_STORAGE,
+            ProtoCommon.FDFS_GROUP_NAME_MAX_LEN + ipAddrLen,
+            (byte) 0);
     byte[] wholePkg = new byte[header.length + bGroupName.length + ipAddrLen];
     System.arraycopy(header, 0, wholePkg, 0, header.length);
     System.arraycopy(bGroupName, 0, wholePkg, header.length, bGroupName.length);
     System.arraycopy(bIpAddr, 0, wholePkg, header.length + bGroupName.length, ipAddrLen);
     out.write(wholePkg);
 
-    ProtoCommon.RecvPackageInfo pkgInfo = ProtoCommon.recvPackage(trackerSocket.getInputStream(),
-      ProtoCommon.TRACKER_PROTO_CMD_RESP, 0);
+    ProtoCommon.RecvPackageInfo pkgInfo =
+        ProtoCommon.recvPackage(
+            trackerSocket.getInputStream(), ProtoCommon.TRACKER_PROTO_CMD_RESP, 0);
     this.errno = pkgInfo.errno;
     return pkgInfo.errno == 0;
   }
@@ -707,7 +759,7 @@ public class TrackerClient {
   /**
    * delete a storage server from the global FastDFS cluster
    *
-   * @param groupName     the group name of storage server
+   * @param groupName the group name of storage server
    * @param storageIpAddr the storage server ip address
    * @return true for success, false for fail
    */
@@ -718,13 +770,13 @@ public class TrackerClient {
   /**
    * delete a storage server from the FastDFS cluster
    *
-   * @param trackerGroup  the tracker server group
-   * @param groupName     the group name of storage server
+   * @param trackerGroup the tracker server group
+   * @param groupName the group name of storage server
    * @param storageIpAddr the storage server ip address
    * @return true for success, false for fail
    */
-  public boolean deleteStorage(TrackerGroup trackerGroup,
-                               String groupName, String storageIpAddr) throws IOException {
+  public boolean deleteStorage(TrackerGroup trackerGroup, String groupName, String storageIpAddr)
+      throws IOException {
     int serverIndex;
     int notFoundCount;
     TrackerServer trackerServer;
@@ -749,8 +801,8 @@ public class TrackerClient {
           }
         } else if (storageStats.length == 0) {
           notFoundCount++;
-        } else if (storageStats[0].getStatus() == ProtoCommon.FDFS_STORAGE_STATUS_ONLINE ||
-          storageStats[0].getStatus() == ProtoCommon.FDFS_STORAGE_STATUS_ACTIVE) {
+        } else if (storageStats[0].getStatus() == ProtoCommon.FDFS_STORAGE_STATUS_ONLINE
+            || storageStats[0].getStatus() == ProtoCommon.FDFS_STORAGE_STATUS_ACTIVE) {
           this.errno = ProtoCommon.ERR_NO_EBUSY;
           return false;
         }
@@ -773,7 +825,12 @@ public class TrackerClient {
       try {
         trackerServer = trackerGroup.getConnection(serverIndex);
       } catch (IOException ex) {
-        System.err.println("connect to server " + trackerGroup.tracker_servers[serverIndex].getAddress().getHostAddress() + ":" + trackerGroup.tracker_servers[serverIndex].getPort() + " fail");
+        System.err.println(
+            "connect to server "
+                + trackerGroup.tracker_servers[serverIndex].getAddress().getHostAddress()
+                + ":"
+                + trackerGroup.tracker_servers[serverIndex].getPort()
+                + " fail");
         ex.printStackTrace(System.err);
         this.errno = ProtoCommon.ECONNREFUSED;
         return false;
